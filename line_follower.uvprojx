@@ -444,21 +444,6 @@
   </Targets>
 
   <RTE>
-    <packages>
-      <filter>
-        <targetInfos/>
-      </filter>
-      <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="5.2.0">
-        <targetInfos>
-          <targetInfo name="Target 1" versionMatchMode="fixed"/>
-        </targetInfos>
-      </package>
-      <package name="STM32F0xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.5.0">
-        <targetInfos>
-          <targetInfo name="Target 1" versionMatchMode="fixed"/>
-        </targetInfos>
-      </package>
-    </packages>
     <apis>
       <api Capiversion="1.0" Cclass="CMSIS" Cgroup="RTOS" exclusive="1">
         <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0"/>

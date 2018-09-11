@@ -8,10 +8,12 @@
 #include "snippets.h"
 #include "LowPass.h"
 
-enum CONTROL_PERIODS_MS
+enum CONTROL_CONSTANTS
 {
 	SAMPLING_PERIOD = 2,
 	PID_PERIOD = 4,
+	ROBOT_SPEED = 767,
+	FORWARD_WORKSPACE = 4095 - ROBOT_SPEED,
 };
 
 enum MODES
@@ -190,8 +192,8 @@ __inline void openThreads(uint8_t new_mode)
 
 void mode(void const *argument)
 {
-	uint8_t cur_mode = INITIAL;
-	uint8_t new_mode;
+	uint32_t cur_mode = INITIAL;
+	uint32_t new_mode;
 	
 	for(;;)
 	{
@@ -215,7 +217,7 @@ void filter(void const *argument)
 {
 	filter_array *filter_tx;
 	float32_t input;
-	uint8_t count = 0, i;
+	uint32_t count = 0, i;
 	
 	for(i = 0; i < NUMBER_OF_ADC_CHANNEL; i++)
 	{
@@ -246,9 +248,9 @@ void filter(void const *argument)
 	}
 }
 
-void calibrate(float32_t *data, float32_t *cal_data)
+__inline void calibrate(float32_t *data, float32_t *cal_data)
 {
-	uint8_t i;
+	uint32_t i;
 	
 	for(i = 0; i < NUMBER_OF_ADC_CHANNEL; i++)
 	{
@@ -257,7 +259,7 @@ void calibrate(float32_t *data, float32_t *cal_data)
 			if (data[i] < max_array[i])
 			{
 				cal_data[i] = (data[i] - min_array[i]) \
-								/ (max_array[i] - min_array[i]);
+							/ (max_array[i] - min_array[i]);
 			}
 			else
 			{
@@ -279,7 +281,7 @@ void centroid(void const *argument)
 	float32_t cal_data[NUMBER_OF_ADC_CHANNEL];
 	float32_t num, div;
 	float32_t static const offset = ((float32_t)NUMBER_OF_ADC_CHANNEL - 1) / 2;
-	uint8_t i;
+	uint32_t i;
 	
 	for(;;)
 	{
@@ -308,13 +310,59 @@ void centroid(void const *argument)
 	}
 }
 
+void setMotorPWM(int32_t u)
+{
+	uint32_t aux;
+	__IO uint32_t *m1_fw, *m1_bw, *m2_fw, *m2_bw;
+
+	if (u > 0)
+	{
+		m2_fw = &M_RIGHT_FW;
+		m2_bw = &M_RIGHT_BW;
+		m1_fw = &M_LEFT_FW;
+		m1_bw = &M_LEFT_BW;
+	}
+	else
+	{
+		u *= -1;
+		m1_fw = &M_RIGHT_FW;
+		m1_bw = &M_RIGHT_BW;
+		m2_fw = &M_LEFT_FW;
+		m2_bw = &M_LEFT_BW;
+	}
+	
+	if (u > FORWARD_WORKSPACE)
+	{
+		aux = 2 * u - FORWARD_WORKSPACE;
+		*m1_bw = 0;
+		*m1_fw = 4095;
+	}
+	else
+	{
+		aux = u;
+		*m1_bw = 4095 - (ROBOT_SPEED + u);
+		*m1_fw = 4095;
+	}
+	if (aux > ROBOT_SPEED)
+	{
+		aux -= ROBOT_SPEED;
+		*m2_bw = 4095;
+		*m2_fw = 4095 - aux;
+	}
+	else
+	{
+		*m2_bw = 4095 - (ROBOT_SPEED - aux);
+		*m2_fw = 4095;
+	}
+}
+
 void pid (void const *argument)
 {
 	osEvent mail;
 	float32_t *line_pos_rx;
-	float32_t kp = 800.0, ki = 0.0, kd = 0.0;
+	float32_t kp = 1024.0, ki = 64.0, kd = 32.0;
 	float32_t static const T = (float32_t)PID_PERIOD / 1000.0;
-	float32_t e, u;
+	float32_t e, u, aux;
 	float32_t sum_e = 0.0, e_1 = 0.0;
 	
 	for(;;)
@@ -325,24 +373,22 @@ void pid (void const *argument)
 		{
 			line_pos_rx = (float32_t *)mail.value.p;
 			e = 0.0 - *line_pos_rx;
-			sum_e += e;
 			u = kp * e;
+			aux = (sum_e + e) * T;
+			if ((aux > -ROBOT_SPEED) && (aux < ROBOT_SPEED)) {
+				sum_e += e;
+			}
 			u += ki * T * sum_e;
 			u += kd / T * (e - e_1);
-			if (u < 0.0)
+			if (u > ROBOT_SPEED)
 			{
-				M_RIGHT_BW = 4095 + u;
-				M_RIGHT_FW = 4095;
-				M_LEFT_FW = 4095 + u;
-				M_LEFT_BW = 4095;
+				u = ROBOT_SPEED;
 			}
-			else
+			else if (u < -ROBOT_SPEED)
 			{
-				M_RIGHT_FW = 4095 - u;
-				M_RIGHT_BW = 4095;
-				M_LEFT_BW = 4095 - u;
-				M_LEFT_FW = 4095;
+				u = -ROBOT_SPEED;
 			}
+			setMotorPWM((int32_t)u);
 			e_1 = e;
 			osMailFree(centroid_mailQ, line_pos_rx);
 		}
@@ -352,7 +398,7 @@ void pid (void const *argument)
 
 void cal(void const *argument)
 {
-	uint8_t i;
+	uint32_t i;
 	osEvent mail;
 	filter_array *filter_rx;
 	

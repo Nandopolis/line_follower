@@ -1,5 +1,5 @@
 Dependencies for Project 'line_follower', Target 'Target 1': (DO NOT MODIFY !)
-F (.\main.c)(0x5A3056F9)(-c --cpu Cortex-M0 -D__RTX -D__EVAL -g -O2 --apcs=interwork --split_sections-I C:\Users\Nandopolis\Documents\keil\line_follower\RTE-I C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\Include-I C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\RTOS\RTX\INC-I C:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.5.0\Device\Include-D__UVISION_VERSION="516" -D_RTE_ -DSTM32F030x6 -DSTM32F030-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (.\main.c)(0x5B1C2800)(-c --cpu Cortex-M0 -D__RTX -D__EVAL -g -O2 --apcs=interwork --split_sections-I C:\Users\Nandopolis\Documents\keil\line_follower\RTE-I C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\Include-I C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\RTOS\RTX\INC-I C:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.5.0\Device\Include-D__UVISION_VERSION="516" -D_RTE_ -DSTM32F030x6 -DSTM32F030-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (osObjects.h)(0x51AE1FD0)
 I (C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\RTOS\RTX\INC\cmsis_os.h)(0x5984A876)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x55AF9EB2)
